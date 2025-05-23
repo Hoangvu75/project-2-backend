@@ -29,11 +29,43 @@ export class MetricsService {
   }
 
   private normalizeRoutePath(path: string): string {
-    if (path.includes('/slow')) return '/slow';
-    if (path.includes('/metrics')) return '/metrics';
-    if (path.includes('/health')) return '/health';
-    if (path.includes('/data')) return '/data';
+    // Handle root path
+    if (path === '/' || path === '') return '/';
     
-    return '/';
+    // Remove query parameters and fragments
+    const cleanPath = path.split('?')[0].split('#')[0];
+    
+    // Split path into segments
+    const segments = cleanPath.split('/').filter(segment => segment !== '');
+    
+    if (segments.length === 0) return '/';
+    
+    // For single segment routes, return as is
+    if (segments.length === 1) {
+      return `/${segments[0]}`;
+    }
+    
+    // For multi-segment routes, normalize based on common patterns
+    const baseRoute = segments[0];
+    const secondSegment = segments[1];
+    
+    // Handle common REST API patterns
+    if (this.isNumeric(secondSegment) || this.isUUID(secondSegment)) {
+      // Pattern: /users/123 -> /users/:id
+      return `/${baseRoute}/:id`;
+    }
+    
+    // For other multi-segment routes, return base + action
+    // Pattern: /auth/login -> /auth/login, /users/profile -> /users/profile
+    return `/${baseRoute}/${secondSegment}`;
+  }
+  
+  private isNumeric(str: string): boolean {
+    return !isNaN(Number(str)) && !isNaN(parseFloat(str));
+  }
+  
+  private isUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
   }
 } 
