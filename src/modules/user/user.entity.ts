@@ -22,6 +22,9 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column('simple-array', { default: 'user' })
+  roles: string[];
+
   @CreateDateColumn()
   createdAt: Date;
 
